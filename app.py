@@ -129,7 +129,33 @@ def diagonalizar_matriz():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     
-    
+@app.route('/valor_propio_dominante', methods=['POST'])
+def valor_propio_dominante():
+    try:
+        data = request.get_json()
+        matriz = data.get('matriz', [])
+
+        # Verificar que se proporciona al menos una matriz
+        if not matriz:
+            return jsonify({'error': 'Se requiere al menos una matriz para obtener el valor propio dominante'}), 400
+
+        # Verificar que la matriz sea cuadrada (número de filas igual al número de columnas)
+        shape = np.array(matriz).shape
+        if len(shape) != 2 or shape[0] != shape[1]:
+            return jsonify({'error': 'La matriz debe ser cuadrada para obtener el valor propio dominante'}), 400
+
+        # Calcular el valor propio dominante y su vector propio asociado
+        valores_propios, vectores_propios = np.linalg.eig(matriz)
+        indice_max_valor_propio = np.argmax(valores_propios)
+        valor_propio_dominante = valores_propios[indice_max_valor_propio]
+        vector_propio_dominante = vectores_propios[:, indice_max_valor_propio]
+
+        return jsonify({
+            'valor_propio_dominante': valor_propio_dominante,
+            'vector_propio_dominante': vector_propio_dominante.tolist()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
     
     
     
