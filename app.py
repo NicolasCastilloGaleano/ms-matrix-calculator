@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import numpy as np
+from scipy.optimize import minimize
 
 app = Flask(__name__)
+CORS(app)
 
 # sumar matrices
 @app.route('/sumar_matrices', methods=['POST'])
@@ -134,7 +137,6 @@ def valor_propio_dominante():
     try:
         data = request.get_json()
         matriz = data.get('matriz', [])
-
         # Verificar que se proporciona al menos una matriz
         if not matriz:
             return jsonify({'error': 'Se requiere al menos una matriz para obtener el valor propio dominante'}), 400
@@ -147,17 +149,55 @@ def valor_propio_dominante():
         # Calcular el valor propio dominante y su vector propio asociado
         valores_propios, vectores_propios = np.linalg.eig(matriz)
         indice_max_valor_propio = np.argmax(valores_propios)
-        valor_propio_dominante = valores_propios[indice_max_valor_propio]
-        vector_propio_dominante = vectores_propios[:, indice_max_valor_propio]
-
+        valor_propio_dominante = round(valores_propios[indice_max_valor_propio], 4)
+        vector_propio_dominante = [round(value, 4) for value in vectores_propios[:, indice_max_valor_propio]]
         return jsonify({
             'valor_propio_dominante': valor_propio_dominante,
-            'vector_propio_dominante': vector_propio_dominante.tolist()
+            'vector_propio_dominante': vector_propio_dominante
         })
     except Exception as e:
+        print("Hay un error")
         return jsonify({'error': str(e)}), 400
     
-    
+# lo que esta comentado aplica lo visto en las sesiones de semillero donde a partir de un vector
+# aleatorio se llega a una aproximacion del vector propio dominante y su respectivo valor propio
+
+# def objetivo(x, matriz):
+#     x = x / np.linalg.norm(x)  # Normalizar para mantener la norma igual a 1
+#     return -x.dot(matriz.dot(x))
+
+# @app.route('/valor_propio_maximo', methods=['POST'])
+# def valor_propio_maximo():
+#     try:
+#         data = request.get_json()
+#         matriz = data.get('matriz', [])
+
+#         # Verificar que se proporciona al menos una matriz
+#         if not matriz:
+#             return jsonify({'error': 'Se requiere al menos una matriz para encontrar el valor propio máximo'}), 400
+
+#         # Verificar que la matriz sea cuadrada (número de filas igual al número de columnas)
+#         shape = np.array(matriz).shape
+#         if len(shape) != 2 or shape[0] != shape[1]:
+#             return jsonify({'error': 'La matriz debe ser cuadrada para encontrar el valor propio máximo'}), 400
+
+#         # Inicializar con un vector aleatorio (normalizado)
+#         x0 = np.random.rand(shape[0])
+#         x0 /= np.linalg.norm(x0)
+
+#         # Optimizar la función objetivo para encontrar el vector propio correspondiente al valor propio máximo
+#         resultado_optimizacion = minimize(objetivo, x0, args=(np.array(matriz),), method='BFGS')
+
+#         # Extraer el valor propio máximo y su respectivo vector propio
+#         valor_propio_maximo = -resultado_optimizacion.fun
+#         vector_propio_maximo = resultado_optimizacion.x
+
+#         return jsonify({
+#             'valor_propio_maximo': valor_propio_maximo,
+#             'vector_propio_maximo': vector_propio_maximo.tolist()
+#         })
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 400    
     
     
     
